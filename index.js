@@ -4,7 +4,11 @@ var convert = require('./convert');
 var store = require('./store').store;
 var process = require('./process').process;
 var chokidar = require('chokidar');
+var express = require('express');
 var path = require('path');
+var os = require('os');
+var ifaces = os.networkInterfaces();
+
 require('es6-promise').polyfill();
 
 var changed = function(source) {
@@ -45,6 +49,25 @@ var changed = function(source) {
 	});
 };
 
+Object.keys(ifaces).forEach(function (ifname) {
+  var alias = 0;
+
+  ifaces[ifname].forEach(function (iface) {
+    if ('IPv4' !== iface.family || iface.internal !== false) {
+      // skip over internal (i.e. 127.0.0.1) and non-ipv4 addresses
+      return;
+    }
+
+    if (alias >= 1) {
+      // this single interface has multiple ipv4 addresses
+      console.log(ifname + ':' + alias, iface.address);
+    } else {
+      // this interface has only one ipv4 adress
+      console.log(ifname, iface.address);
+    }
+  });
+});
+
 init();
 
 chokidar.watch(config.folder.watch, {
@@ -55,4 +78,14 @@ chokidar.watch(config.folder.watch, {
 	console.log(event, path); 
 }).on('ready', function() {
 	console.log('ready');
+});
+
+var app = express();
+app.use(express.static(path.join(__dirname, 'static')));
+
+var server = app.listen(3000, function() {
+	var host = server.address().address;
+	var port = server.address().port;
+	
+  console.log("Listening at http://%s:%s", host, port);
 });

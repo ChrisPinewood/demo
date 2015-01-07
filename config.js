@@ -3,7 +3,8 @@ config.folder = {};
 config.git = {};
 config.file = {};
 
-config.folder.watch = '/home/researcher/Dropbox/ResearchWell/';
+//config.folder.watch = '/home/researcher/Dropbox/ResearchWell/';
+config.folder.watch = '/home/researcher/Dropbox/DemoDev/';
 config.folder.working = '/home/researcher/Working/';
 config.folder.repo = '/home/researcher/Repo/';
 config.folder.scripts = '/home/researcher/Code/scripts/';

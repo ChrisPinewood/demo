@@ -1,0 +1,40 @@
+<html ng-app>
+	<body ng-controller='fundController'>
+		<div class="modal-header">
+			<h3 class="modal-title">Edit Fund</h3>
+		</div>
+		<div class="modal-body">
+			<form name='editFundForm'>
+				<label for='idEditFundName'>Name</label>
+				<span class="error" ng-show="editFundForm.name.$error.required"> - Required</span>
+				<input id='idEditFundName' type='text' name='name' class='form-control' ng-model='newFund.name' required></input>
+			
+				<label for='idEditFundResearcher'>Researcher's Email</label>
+				<span class="error" ng-show="editFundForm.email.$error.email"> - Invalid</span>
+				<span class="error" ng-show="editFundForm.email.$error.required"> - Required</span>
+				<input id='idEditFundResearcher' type='email' name='email' class='form-control' ng-model='newFund.researcher' ng-pattern="/^[_a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$/" required></input>
+			
+				<p ng-show='newFund.funded'>
+					<label for='idEditFundRearcher'>Funded Date</label>
+					<input id='idEditFundResearcher' type='date' class='form-control' ng-model='newFund.funded'></imput>
+				</p>
+			
+				<div ng-show='newFund.reportDue'>
+					<label for='idEditFundDue'>Report Due</label>
+					<div class='input-group'>
+						<input id='idEditFundDue' type='date' class='form-control' ng-model='newFund.reportDue'></input>
+						<span class="input-group-btn">
+							<button type='button' class='btn btn-default' ng-click='fundedPlusYear()' title='One year from funded date'>
+								<i class='glyphicon glyphicon-forward'></i>
+							</button>
+						</span>
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class="modal-footer">
+			<button class="btn btn-primary" ng-click="ok()" ng-disabled='editFundForm.$invalid'>OK</button>
+			<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+		</div>
+	</body>
+</html>

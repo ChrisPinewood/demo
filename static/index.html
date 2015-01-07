@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<title>Chronicle:Well by Research:Well</title>
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js"></script>
+	<link rel="stylesheet" href="css/bootstrap.css">
+	<link rel="stylesheet" href="css/bootstrap-theme.css">
+	<link href="css/bootstrap-dialog.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body ng-app='funderApp'>
+	<header class='page-header container-fluid'>
+			<div>
+				<h1>Chronicle:Well <small>by Research:Well</small></h1>
+			</div>
+			<p class='text-right'>Logged in as: <small>funder.rwell@gmail.com</small></p>
+	</header>
+
+	<article class='container-fluid' ng-controller='FundListCtrl'>
+		<div class='row'>
+			<div class='col-md-9'>
+				<h1>Funds</h1>
+				<p ng-show='funds.length > 0'>Below are the list of funds that have already been created:</p>
+				<p ng-show='funds.length < 1'>Created funds will be shown in the table below:</p>
+		
+				<table st-table='rowCollection' class='table table-striped table-hover'>
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Researcher</th>
+							<th>Funded Date</th>
+							<th>Report Due</th>
+							<th>Status</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat='fund in funds'>
+							<td>{{fund.name}}</td>
+							<td>{{fund.researcher}}</td>
+							<td>{{fund.funded | date : 'dd/MM/yyyy'}}</td>
+							<td>{{fund.reportDue | date : 'dd/MM/yyyy'}}</td>
+							<td>{{fund.status}}</td>
+							<td class='btn-group'>
+								<button class='btn btn-default' type='button' title='Edit' ng-click='edit(fund)'>
+									<i class="glyphicon glyphicon-edit"></i>
+								</button>
+								<button class='btn btn-default' type='button' title='Remove' ng-click='remove(fund)'>
+									<i class="glyphicon glyphicon-remove"></i>
+								</button>
+							</td>
+						</tr>
+					</tbody>
+					<tfoot>
+						<tr>
+							<td>
+								<button class='btn btn-default' type='button' title='Add' ng-click='create()'>
+									<i class="glyphicon glyphicon-plus"></i>
+								</button>
+							</td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<aside class='col-md-3 panel panel-primary'>
+				<h1 class='panel-heading'>Fund List</h1>
+				<p>The entries in the fund list can be ammended or removed.  You can also create new funds.</p>
+			</aside>
+		</div>
+	</article>
+		
+	<footer class='jumbotron text-center'>
+		<p>&copy;2015 Research:Well</p>
+		<p><a href='http://www.researchwell.org/'>ResearchWell, London, UK</a></p>
+		<p><a href='mailto:info@researchwell.org'>info@researchwell.org</a></p>
+		
+	</footer>
+	<script src='https://code.jquery.com/jquery-1.9.1.js'></script>
+	<script src="js/bootstrap.js"></script>
+	<script src='js/ui-bootstrap-tpls-0.12.0.js'></script>
+	<script src='js/fundController.js'></script>
+</body>
+</html>
