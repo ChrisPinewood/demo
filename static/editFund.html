@@ -1,0 +1,24 @@
+<div class="modal-header">
+	<h3 class="modal-title">Edit Details</h3>
+</div>
+<div class="modal-body">
+	<form name='editFundForm'>
+		<label for='idEditResearcher'>Researcher</label>
+		<span class="error" ng-show="editFundForm.researcher.$error.required"> - Required</span>
+		<input id='idEditResearcher' type='text' name='researcher' class='form-control' ng-model='newFund.researcher' required></input>
+	
+		<label for='idEditEmail'>Email</label>
+		<span class="error" ng-show="editFundForm.email.$error.email"> - Invalid</span>
+		<span class="error" ng-show="editFundForm.email.$error.required"> - Required</span>
+		<input id='idEditEmail' type='email' name='email' class='form-control' ng-model='newFund.email' ng-pattern="/^[_a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$/" required></input>
+		
+		<div ng-show='fund.status==="awaiting"'>
+			<label for='idEditApproval'>Fund Approved</label>
+			<input id='idEditApproval' type='checkbox' name='approval' ng-model='newFund.status' ng-true-value='"ok"' ng-false-value='"awaiting"' /> 
+		</div>
+	</form>
+</div>
+<div class="modal-footer">
+	<button class="btn btn-primary" ng-click="ok()" ng-disabled='editFundForm.$invalid'>OK</button>
+	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

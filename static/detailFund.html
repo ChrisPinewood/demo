@@ -1,0 +1,46 @@
+<div class="modal-header">
+	<h3 class="modal-title">Fund Details</h3>
+</div>
+<div class="modal-body">
+	<label for='idEditResearcher'>Researcher</label>
+	<input id='idEditResearcher' type='text' name='researcher' class='form-control' ng-model='fund.researcher' readonly></input>
+
+	<label for='idEditEmail'>Email</label>
+	<input id='idEditEmail' type='email' name='email' class='form-control' ng-model='fund.email' ng-pattern="/^[_a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$/" readonly></input>
+	
+	<div class='panel panel-primary'>
+		<h1 class='panel-heading'>Reports</h1>
+		<p ng-show='fund.reports.length > 0'>Below are the list of reports that have been created:</p>
+		<p ng-show='fund.reports.length < 1'>Created reports will be displayed here.</p>
+
+		<table ng-show='fund.reports.length > 0' st-table='rowCollection' class='table table-striped table-hover'>
+			<thead>
+				<tr>
+					<th>Filename</th>
+					<th>Report Type</th>
+					<th>Complete</th>
+					<th>Last Updated</th>
+					<th>Missing Sections</th>
+					<th>File History</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat='report in fund.reports'>
+					<td>{{report.filename}}</td>
+					<td>{{report.type}}</td>
+					<td>{{report.complete | yesNo}}<span class="badge pull-right help" title='{{getWhyIncomplete(report)}}'>i</span></td>
+					<td>{{report.updated | date : 'dd/MM/yyyy'}}</td>
+					<td>{{report.missing.length > 0 | yesNo}}<span class="badge pull-right help" title='{{getArrayAsList(report.missing)}}'>i</span></td>
+					<td class='btn-group'>
+						<a class='btn btn-default' href='{{report.link}}' target='_blank' title='View History'>
+							<i class="glyphicon glyphicon-th-list"></i>
+						</a>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+<div class="modal-footer">
+	<button class="btn btn-warning" ng-click="close()">Close</button>
+</div>

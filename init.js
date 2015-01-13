@@ -1,12 +1,14 @@
 module.exports = {
 	init : function() {
 		createFolder(config.folder.working)
-		.then(createRepo(config.folder.repo, config.git.remote));
+		.then(function(){
+			return createRepo(config.folder.repo, config.git.remoteFull);
+		});
 	}
 }
 
 var config = require('./config');
-var git = require('nodegit');
+var git = require('./store');
 var fs = require('fs');
 
 var createFolder = function(source) {
@@ -25,7 +27,8 @@ var createRepo = function(source, remote) {
 		function(resolve, reject) {
 			createFolder(source)
 			.then(function(value) {
-				git.Clone.clone(remote, source);
+				console.log('Cloning', source, remote);
+				return git.clone(source, remote);
 			});
 		});
 };

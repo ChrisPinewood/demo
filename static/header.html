@@ -1,0 +1,29 @@
+<header class='page-header'>
+	<div>
+		<img src='researchwell.png'></img>
+		<h1>Chronicle:Well <small>by Research:Well</small></h1>
+	</div>
+	<div ng-show='user' class='dropdown pull-right'>
+		<button class='btn btn-default' data-toggle="dropdown">
+			<i class='glyphicon glyphicon-user'></i>
+			{{user}}
+			<span class="caret"></span>
+		</button>
+
+		<ul class="dropdown-menu" role="menu">
+			<li>
+				<a href='#' title='Edit Profile'>
+					<i class="glyphicon glyphicon-edit"></i>
+					Edit Profile
+				</a>
+			</li>
+			<li>
+				<a href='/'>
+				<i class='glyphicon glyphicon-log-out'></i>
+				Logout
+				</a>
+			</li>
+		</ul>
+	</div>
+	<div class='clearfix'>&nbsp;</div>
+</header>

@@ -1,7 +1,7 @@
 var config = require('./config');
 var init = require('./init').init;
 var convert = require('./convert');
-var store = require('./store').store;
+var git = require('./store');
 var process = require('./process').process;
 var chokidar = require('chokidar');
 var express = require('express');
@@ -18,6 +18,8 @@ var changed = function(source) {
 		console.log('Skipping', source);
 		return;
 	}
+	
+	console.log(new Date(), 'Beginning processing...');
 		
 	var filename = path.basename(source);
 	var ext = path.extname(filename);
@@ -33,7 +35,7 @@ var changed = function(source) {
 	convert.toMarkdown(source, destination)
 	.then(function(value){
 		console.log('Store...');
-		return store(config.folder.repo, newFilename, 'working', 'File modified');
+		return git.store(config.folder.repo, newFilename, 'master', 'Dropbox detect modification');
 	}).then(function(value){
 		console.log('Process...');
 		return process(destination, workingFile, statusFile);
@@ -43,8 +45,10 @@ var changed = function(source) {
 	}).then(function(value){
 		console.log('Convert status...');
 		return convert.toDocx(statusFile, statusDoc);
+	}).then(function(){
+		console.log(new Date(), '... finished processing');
 	}).catch(function(reason) {
-		console.log('ERROR...');
+		console.log(new Date(), '...ERROR');
 		console.log(reason);
 	});
 };

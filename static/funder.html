@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<title>Chronicle:Well by Research:Well</title>
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js"></script>
+	<link rel="stylesheet" href="css/bootstrap.css">
+	<link rel="stylesheet" href="css/bootstrap-theme.css">
+	<link href="css/bootstrap-dialog.css" rel="stylesheet" type="text/css" />
+	<link href='css/font-awesome.css' rel='stylesheet' type='text/css' />
+	<link href='css/site.css' rel='stylesheet' type='text/css' />
+</head>
+
+<body ng-app='funderApp'>
+	<div ng-include='"header.html"' ng-controller='FunderCtrl'></div>
+	
+	<article class='container' ng-controller='FundListCtrl'>
+		<div class='row'>
+			<div class='col-md-4 widget'>
+				<div class='widget-icon green'>
+					<i class='fa fa-users'></i>
+				</div>
+				<div class='widget-title'>{{researchers.length}}</div>			
+				<div>Users</div>
+			</div>
+			<div class='col-md-4 widget'>
+				<div class='widget-icon blue'>
+					<i class='fa fa-file-text'></i>
+				</div>
+				<div class='widget-title'>{{totalReports}}</div>			
+				<div>Total Reports</div>
+			</div>
+			<div class='col-md-4 widget'>
+				<div class='widget-icon yellow'>
+					<i class='fa fa-clock-o'></i>
+				</div>
+				<div class='widget-title'>{{totalOverdue}}</div>			
+				<div>Fund Overdue</div>
+			</div>
+		</div>
+	</article>
+
+	<article class='container' ng-controller='FundListCtrl'>
+	<div class='panel panel-primary'>
+		<h1 class='panel-heading'>Fund List</h1>
+		<p>The entries in the fund list can be viewed below.</p>
+		<p ng-show='funds.length > 0'>Below are the list of funds that have already been created:</p>
+		<p ng-show='funds.length < 1'>Created funds will be shown in the table below:</p>
+		<!--<div class="table-responsive">-->
+			<table st-table='rowCollection' class='table table-hover'>
+				<thead>
+					<tr>
+						<th>Status</th>
+						<th>Researcher</th>
+						<th>Email</th>
+						<th>Reports</th>
+						<th>Updated</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat='fund in funds' ng-class='{info : fund.status==="ok", warning : fund.status==="awaiting", danger : fund.status==="overdue"}'>
+						<td>{{fund.status | titleCase}}<span ng-show='fund.awarded' class="badge pull-right help" title='{{fund.awarded | awardDate}}'>i</span></td>
+						<td>{{fund.researcher}}</td>
+						<td>{{fund.email}}</td>
+						<td>{{fund.reports.length}}</td>
+						<td>{{fund.lastUpdated | date : 'dd/MM/yyyy'}}</td>
+						<td class='btn-group'>
+							<button class='btn btn-default' type='button' title='Edit' ng-click='edit(fund)'>
+								<i class="glyphicon glyphicon-edit"></i>
+							</button>
+							<button class='btn btn-default' type='button' title='Details' ng-click='details(fund)'>
+								<i class="glyphicon glyphicon-stats"></i>
+							</button>
+							<a class='btn btn-default' href='{{fund.repo}}' target='_blank' title='View Progress'>
+								<i class="glyphicon glyphicon-book"></i>
+							</a>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		<!--</div>-->
+	</div>
+	</article>
+	
+	<div ng-include='"footer.html"' ng-controller='FunderCtrl'></div>
+
+	<script src='https://code.jquery.com/jquery-1.9.1.js'></script>
+	<script src="js/bootstrap.js"></script>
+	<script src='js/ui-bootstrap-tpls-0.12.0.js'></script>
+	<script src='js/app.js'></script>	
+	<script src='js/fundController.js'></script>
+	<script src='js/researchController.js'></script>
+	<script src='js/filters.js'></script>
+</body>
+</html>

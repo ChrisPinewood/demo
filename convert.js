@@ -1,7 +1,7 @@
 module.exports = {
 	toMarkdown : function(source, destination) {
 		return new Promise( function(resolve, reject) {
-			var command = config.folder.scripts + 'convert.sh \"' + source + '\" \"' + destination + '\" markdown';
+			var command = config.folder.scripts + 'convert.sh \"' + source + '\" \"' + destination + '\" markdown_github';
 			exec(command, function(error, stdout, stderr){
 				if(!error) {
 					console.log('Converted', source, 'to', destination);
@@ -9,7 +9,7 @@ module.exports = {
 				} else {
 					console.log('FAILED to convert', source, 'to', destination, stderr);
 					reject(stderr);
-				}				
+				}
 			});
 		});
 	},
@@ -19,6 +19,7 @@ module.exports = {
 			exec(command, function(error, stdout, stderr){
 				if(!error) {
 					console.log('Converted', source, 'to', destination);
+					console.log(stdout);
 					resolve(stdout);
 				} else {
 					console.log('FAILED to convert', source, 'to', destination, stderr);

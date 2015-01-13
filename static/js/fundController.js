@@ -1,44 +1,66 @@
-angular.module('funderApp', ['ui.bootstrap']);
+app.controller('FunderCtrl', function ($scope) {
+	$scope.user='funder.rwell@gmail.com';
+});
 
-angular.module('funderApp').controller('FundListCtrl', function ($scope, $modal) {
-	$scope.funds = [{
-		name: 'Are people like fish?',
-		researcher: 'billy@fish.com',
-		created: new Date('2012-09-01'),
-		funded: new Date('2013-10-23'),
-		reportDue: new Date('2014-10-23'),
-		status: 'Funded',
-		overdue: true
-	},
-	{
-		name: 'Something very serious',
-		researcher: 'bob@grey.com',
-		created: new Date('2012-09-01'),
-		funded: new Date('2014-05-04'),
-		reportDue: new Date('2015-05-04'),
-		status: 'Submitted',
-		overdue: false
-	},
-	{
-		name: 'They\'d be crazy to fund this',
-		researcher: 'krusty@clown.biz',
-		created: new Date('2012-09-01'),
-		funded: new Date('2014-08-11'),
-		reportDue: new Date('2015-12-12'),
-		status: 'Rejected',
-		overdue: false
-	}];
+app.controller('MainCtrl', function ($scope) {
+	$scope.user=null;
+});
+
+app.controller('FundListCtrl', function ($scope, $modal, $http) {
 	
-	$scope.remove = function(fund){
-		var idx = $scope.funds.indexOf(fund);
-		if (idx >= 0) {
-			$scope.funds.splice(idx, 1);
+	$scope.funds = [];
+	$scope.researchers = [];
+	$scope.totalReports = 0;
+	$scope.totalOverdue = 0;
+	
+	$http.get('/data/funds.json').success(function(data, status, headers, config){
+		// Add aggregate information to the data
+		if (data){
+			data.forEach(function(fund){
+				fund.lastUpdated = lastUpdated(fund);
+				$scope.totalReports += fund.reports.length;
+				if (fund.status === 'overdue') $scope.totalOverdue++;
+			});
 		}
-	};
+		$scope.funds = data;
+	});
+	
+	$http.get('/data/researcher.json').success(function(data, status, headers, config){
+		if (data){
+			$scope.researchers = data;
+		}
+	});
+	
+	var lastUpdated = function(fund){
+		if (fund.reports.length < 1)
+			return null;
+			
+		var result = fund.reports[0].updated;
+		for (var reportIdx = 1; reportIdx < fund.reports.length; reportIdx++){
+			if (result < fund.reports[reportIdx].updated){
+				result = fund.reports[reportIdx].updated;
+			}
+		}
+					
+		return result;
+	}
+	
+	var getLastUpdate = function(funds){
+		var lastUpdated = 'Never';
+		if (funds.length > 0){
+			lastUpdated = funds[0].lastUpdated;
+			for (var idx = 1; idx < funds.length; idx++){
+				if (lastUpdated > funds[idx].lastUpdated){
+					lastUpdated = funds[idx].lastUpdated;
+				}
+			}
+		}
+		return lastUpdated;
+	}
 	
 	$scope.edit = function(fund){
 		var modalInstance = $modal.open({
-			templateUrl: 'editFundContent.html',
+			templateUrl: 'editFund.html',
 			backdrop: true,
 			controller: 'EditFundCtrl',
 			resolve: {
@@ -47,71 +69,89 @@ angular.module('funderApp').controller('FundListCtrl', function ($scope, $modal)
 				}
 			}
 		});
-	};
-	
-	$scope.create = function(){
-		var newFund = {
-			name: '',
-			researcher: '',
-			created: new Date(),
-			funded: null,
-			reportDue: null,
-			status: 'Created',
-			overdue: false
-		};
 		
-		if (newFund.reportDue) newFund.reportDue.setFullYear(newFund.reportDue.getFullYear() + 1);
-		
-		var modalInstance = $modal.open({
-			templateUrl: 'editFundContent.html',
-			backdrop: true,
-			controller: 'EditFundCtrl',
-			resolve: {
-				fund: function(){
-					return newFund;
-				}
-			}
-		});
-		
-		modalInstance.result.then(function(fund) {
-			console.log(fund || {});
-      $scope.funds.push(fund);
+		modalInstance.result.then(function (result) {
+			console.log(result);
+    }, function () {
+      console.log('Modal dismissed', new Date());
     });
 	};
 	
+	$scope.details = function(fund){
+		var modalInstance = $modal.open({
+			templateUrl: 'detailFund.html',
+			backdrop: true,
+			size: 'lg',
+			controller: 'DetailFundCtrl',
+			resolve: {
+				fund: function(){
+					return fund;
+				}
+			}
+		});
+	};	
 });
 
-angular.module('funderApp').controller('EditFundCtrl', function($scope, $modalInstance, fund){
+app.controller('ConfirmCtrl', function($scope, $modalInstance, details){
+	$scope.details = details || { title : '', message : '' };
+	$scope.title = $scope.details.title || '';
+	$scope.message = $scope.details.message || '';
+	
+	$scope.yes = function() {
+		$modalInstance.close();
+	};
+	
+	$scope.no = function() {
+		$modalInstance.dismiss();
+	};
+});
+
+app.controller('EditFundCtrl', function($scope, $modalInstance, fund){
 	$scope.fund = fund;
 	$scope.newFund = angular.copy(fund);
 	
-	$scope.today = function(item){
-		item = new Date();
-	};
-	
-	$scope.dateOptions = {
-    startingDay: 1
-  };
-  
-  $scope.format = 'dd/MM/yyyy';
-	
-	$scope.openDate = function($event, opened){
-		$event.preventDefault();
-    $event.stopPropagation();
-    $scope[opened] = true;
-	};
-	
-	$scope.fundedPlusYear = function(){
-		$scope.newFund.reportDue = new Date($scope.newFund.funded);
-		$scope.newFund.reportDue.setFullYear($scope.newFund.reportDue.getFullYear() + 1);
-	};
-
 	$scope.ok = function () {
-		$scope.fund = angular.copy($scope.newFund);
+		if ($scope.fund.status !== $scope.newFund.status && $scope.newFund.status === 'ok'){
+			$scope.fund.awarded = new Date();
+		}
+		angular.extend($scope.fund, $scope.newFund);
 		$modalInstance.close($scope.fund);
 	};
 	
 	$scope.cancel = function () {
 		$modalInstance.dismiss('cancel');
+	};
+});
+
+app.controller('DetailFundCtrl', function($scope, $modalInstance, fund){
+	$scope.fund = fund;
+	
+	$scope.getArrayAsList = function(missing) {
+		var list = '';
+		missing.forEach(function(item){
+			list += item.name + '\n';
+		});
+		
+		return list;
+	};
+	
+	$scope.getWhyIncomplete = function(report) {
+		var reason = '';
+		if (report.complete) reason += 'Complete\n';
+		
+		if (report.missing && report.missing.length > 0)
+			reason += 'Missing sections = ' + report.missing.length  + '\n';
+			
+		if (report.unknown && report.unknown.length > 0)
+			reason += 'Unknown sections = ' + report.unknown.length + '\n';
+			
+		if (report.requires && report.requires.length > 0)
+			reason += 'Sections with requied information = ' + report.requires.length + '\n';
+			
+		return reason;
+	}
+	
+	$scope.close = function () {
+		$modalInstance.dismiss('close');
 	};
 });

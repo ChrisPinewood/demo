@@ -26,7 +26,15 @@ var process = function(source, destination, status) {
 					writeFile(destination, desired.contents)
 					.then(function(){
 						var details = buildStatus(desired.details, source, destination, data, info.document.name);
-						writeFile(status, details);
+						return writeFile(status, details, desired.details);
+					}).then(function(details){
+						var reportDetails = { 
+							filename: buildFilename(source), 
+							markdown: buildMarkdown(source), 
+							link: buildLink(source)
+						};
+						var statusObject = buildStatusObject(desired.details, info.document.name, reportDetails);
+						return updateFile(statusObject);
 					}).then(function(){ 
 						resolve(); 
 					}).catch(function(val){
@@ -56,16 +64,83 @@ var process = function(source, destination, status) {
 		});
 }
 
-var writeFile = function(destination, data){
+var buildFilename = function(source){
+	var basename = path.basename(source, config.file.markdown);
+	return basename + config.file.docx;
+}
+
+var buildMarkdown = function(source){
+	return basename = path.basename(source);
+}
+
+var buildLink = function(source){
+	return config.git.historyUrl + buildMarkdown(source);
+}
+
+var writeFile = function(destination, data, pass){
 	return new Promise(
 		function(resolve, reject){
 			fs.writeFile(destination, data, function(err){
 				if (err) {
 					reject(err);
 				} else {
+					var passthrough = pass;
 					console.log('Saved', destination);
-					resolve();
+					resolve(pass);
 				}
+			});
+		});
+}
+
+var updateFile = function(statusObject){
+	return new Promise(
+		function(resolve, reject){
+			fs.readFile(config.file.documentStatus, 'utf-8', function(err, data){
+				if (err){
+					reject(err);
+					return;
+				}
+				var allStatus = JSON.parse(data);
+				console.log(data, allStatus);
+				var statusIdx = allStatus.findIndex(function(element, index, array){
+					return (element) && (element.researcher.toUpperCase() === statusObject.researcher.toUpperCase());
+				});
+				if (statusIdx >= 0){
+					allStatus[statusIdx].researcher = statusObject.researcher;
+					allStatus[statusIdx].email = statusObject.email;
+					allStatus[statusIdx].repo = statusObject.repo;
+					
+					if (!allStatus[statusIdx].reports){
+						allStatus[statusIdx].reports = [];
+					}
+					
+					var reportIdx = allStatus[statusIdx].reports.findIndex(function(element, index, array){
+						return (element) && (element.filename.toUpperCase() === statusObject.report.filename.toUpperCase());
+					});
+					
+					if (reportIdx >= 0){
+						console.log('Adding to report idx', reportIdx);
+						allStatus[statusIdx].reports[reportIdx] = statusObject.report;
+					} else {
+						console.log('Adding first report', statusObject.report);
+						allStatus[statusIdx].reports.push(statusObject.report);
+					}
+					
+				} else {
+					var newStatus = statusObject;
+					delete newStatus.report;
+					newStatus.reports = [statusObject.report];
+					allStatus.push(newStatus);
+				}
+				
+				var strObj = JSON.stringify(allStatus);
+				fs.writeFile(config.file.documentStatus, strObj, function(err){
+					if (err) {
+						reject(err);
+					} else {
+						resolve();
+					}
+				});
 			});
 		});
 }
@@ -86,7 +161,7 @@ var readFile = function(source) {
 var guessReport = function(data) {
 	var result = {document: {}, detected: false, original: data};
 	documents.forEach(function(document){
-		if (data.search(new RegExp(document.keyword, 'g')) >= 0) {
+		if (data.search(new RegExp(document.keyword, 'gi')) >= 0) {
 			result.document = document;
 			result.detected = true;
 			return;
@@ -279,9 +354,7 @@ var buildStatus = function(details, source, destination, data, detected){
 			details.missing.forEach(function(missing){
 				result += '* ' + missing.name;
 				if ('requires' in missing){
-					console.log('??');
 					result += ' (also requires: ' + missing.requires + ')';
-					console.log('??');
 				}
 				result += '\n';
 			});
@@ -301,6 +374,24 @@ var buildStatus = function(details, source, destination, data, detected){
 	return result;
 }
 
+var buildStatusObject = function(details, detected, reportDetails){
+	var status = {
+		researcher: config.user.name,
+		repo: config.git.remote,
+		email: config.user.email,
+		report: reportDetails
+	};
+	
+	status.report.type= detected;
+	status.report.complete= details.complete;
+	status.report.ordered= details.complete && !details.unordered;
+	status.report.unknown= details.unknown;
+	status.report.missing= details.missing;
+	status.report.requires= details.requires;
+	status.report.updated= new Date();
+	
+	return status;
+}
 
 ///////////////////////////////////////////////////////////////
 // Polyfills for ES6
