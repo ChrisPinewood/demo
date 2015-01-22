@@ -126,6 +126,63 @@ app.controller('EditFundCtrl', function($scope, $modalInstance, fund){
 app.controller('DetailFundCtrl', function($scope, $modalInstance, fund){
 	$scope.fund = fund;
 	
+	$scope.getStatus = function(report) {
+		var status = 'New';
+		
+		if (report.updated){
+			var now = new Date();
+			var lastUpdate = new Date(report.updated)
+			var diff = now - lastUpdate;
+			
+			var SIX_MONTHS = 1000 * 60 * 60 * 24 * 182;
+			if (diff > SIX_MONTHS){
+				status = 'Dormant';
+			} else {
+				status = 'In Development';
+			}
+		}
+		
+		return status;
+	}
+	
+	$scope.getIssues = function(report) {
+		var issues = [];
+		
+		if (report.missing.length > 0 || report.unknown.length > 0) {
+			issues.push('Does not conform to publishing guidelines');
+		}
+		
+		if (!report.dmplink) {
+			issues.push('No data management plan');
+		}
+		
+		if (report.requires.length > 0){
+			var missing = [];
+			report.requires.forEach(function(item){
+				missing.push(item.requires);
+			});
+			issues.push('No ' + missing.join());
+		}
+		
+		return issues;
+	}
+	
+	
+	
+	$scope.getPrivacy = function(report) {
+		return 'Private';
+	}
+	
+	$scope.generateButton = function(url, title) {
+		if (url === '')
+			return '';
+		
+		var button = '<button class="btn btn-default" type="button" title="' + title + '"><i class="glyphicon glyphicon-edit"></i></button>';
+		var link = '<a href="' + url + '">' + button + '</a>';
+		
+		return link;
+	}
+	
 	$scope.getArrayAsList = function(missing) {
 		var list = '';
 		missing.forEach(function(item){

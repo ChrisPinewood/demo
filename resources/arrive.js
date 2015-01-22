@@ -39,7 +39,8 @@ var sections = [
 	},
 	{
 		name: 'Sample size',
-		type: types.heading1
+		type: types.heading1,
+		requires: 'power calculation'
 	},
 	{
 		name: 'Allocating animals to experimental groups',
@@ -47,8 +48,7 @@ var sections = [
 	},
 	{
 		name: 'Experimental outcomes',
-		type: types.heading1,
-		requires: 'power calculation'
+		type: types.heading1
 	},
 	{
 		name: 'Statistical methods',

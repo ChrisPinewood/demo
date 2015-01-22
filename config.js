@@ -4,8 +4,8 @@ config.git = {};
 config.file = {};
 config.user = {};
 
-//config.folder.watch = '/home/researcher/Dropbox/ResearchWell/';
-config.folder.watch = '/home/researcher/Dropbox/DemoDev/';
+config.folder.watch = '/home/researcher/Dropbox/ResearchWell/';
+//config.folder.watch = '/home/researcher/Dropbox/DemoDev/';
 config.folder.working = '/home/researcher/Working/';
 config.folder.repo = '/home/researcher/Repo/';
 config.folder.scripts = '/home/researcher/Code/scripts/';
@@ -21,6 +21,8 @@ config.git.historyUrl = config.git.protocol + config.git.url + '/blob/master/';
 
 config.file.markdown = '.md';
 config.file.docx = '.docx';
+config.file.dmp = '.dmp';
+config.file.detail = '.detail';
 config.file.status = '.status';
 config.file.suggested = '.suggested';
 config.file.documentStatus = config.folder.client + 'funds.json';

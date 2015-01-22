@@ -29,9 +29,16 @@ var process = function(source, destination, status) {
 						return writeFile(status, details, desired.details);
 					}).then(function(details){
 						var reportDetails = { 
+							study: buildStudy(source),
 							filename: buildFilename(source), 
 							markdown: buildMarkdown(source), 
-							link: buildLink(source)
+							link: buildLink(source),
+							prereglink: buildLink(source),
+							dmplink: buildDMP(source),
+							detaillink: buildDetail(source),
+							citations: '',
+							submittedpublic: '',
+							privacy: ''
 						};
 						var statusObject = buildStatusObject(desired.details, info.document.name, reportDetails);
 						return updateFile(statusObject);
@@ -64,6 +71,10 @@ var process = function(source, destination, status) {
 		});
 }
 
+var buildStudy = function(source) {
+	return path.basename(source, config.file.markdown);
+}
+
 var buildFilename = function(source){
 	var basename = path.basename(source, config.file.markdown);
 	return basename + config.file.docx;
@@ -75,6 +86,16 @@ var buildMarkdown = function(source){
 
 var buildLink = function(source){
 	return config.git.historyUrl + buildMarkdown(source);
+}
+
+var buildDMP = function(source){
+	var basename = path.basname(source, config.file.markdown);
+	return buildLink(basename + config.file.dmp + config.file.markdown);
+}
+
+var buildDetail = function(source){
+	var basename = path.basname(source, config.file.markdown);
+	return buildLink(basename + config.file.detail + config.file.markdown);
 }
 
 var writeFile = function(destination, data, pass){
@@ -171,18 +192,19 @@ var guessReport = function(data) {
 }
 
 var extractSections = function(data) {	
-	var re = /(?:\n#* )(.*)(?:\n)|(?:\n\*)(.*)(?:\*\n)|(?:\n_)(.*)(?:_\n)/gm;
+	var re = /(?:\n#* )(.*)(?:\n)|(?:\n\*)(.*)(?:\*)|(?:\n_)(.*)(?:_\n)/gim;
 	var results = [];
 	var match = {};
 	while (match = re.exec(data)){
 		var result = {
 			type: types.heading1,
 			index: match.index,
-			heading: match[1] || match[2],
+			heading: match[1] || match[2] || match[3],
 			textEnd: match.index,
 			done: false
 		};
-		result.heading = result.heading.replace(/:+$/,'');
+		result.heading = result.heading.replace(/[:\*]/g,'');
+		result.heading = result.heading.trim();
 		result.textStart = result.index + match[0].length + 1;
 		if (match[0].split('#').length > 2) result.type = types.heading2;
 		results.push(result);
@@ -201,14 +223,14 @@ var extractSections = function(data) {
 }
 
 var extractTitleAbstract = function(data, firstSectionStart) {
-	var re = /^(?:---\ntitle: \')(.*)(?:\'\n...)|^(?:\*)(.*)(?:\*)|^(?:_)(.*)(?:_)/;
+	var re = /^(?:---\ntitle: \')(.*)(?:\'\n...)|^(?:\*)(.*)(?:\*)|^(?:_)(.*)(?:_)|^(?:#* )(.*)(?:\n)/;
 	var result = null;
 	var match = re.exec(data);
 	if (match) {
 		result = {
 			type: types.title1,
 			index:  match.index,
-			heading: match[1] || match[2] || match[3],
+			heading: match[1] || match[2] || match[3] || match[4],
 			textEnd: firstSectionStart,
 			done: false
 		};
@@ -262,11 +284,15 @@ var buildFile = function(desiredSections, actualSections, data) {
 					document.details.complete = false;
 					document.contents += '*Enter abstract here*\n';
 				}
+			} else {
+				actual.done = true;
 			}
+			
 			if (!document.details.complete){
 				document.details.missing.push(desired);
 			}
-		} else {		
+		} else 
+		{		
 			// Find the actual section
 			var actualIdx = actualSections.findIndex(function(element, index, array){
 				return (element) && (element.heading.toUpperCase() === desired.name.toUpperCase() && !element.done);

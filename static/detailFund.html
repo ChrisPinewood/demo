@@ -16,25 +16,52 @@
 		<table ng-show='fund.reports.length > 0' st-table='rowCollection' class='table table-striped table-hover'>
 			<thead>
 				<tr>
-					<th>Filename</th>
-					<th>Report Type</th>
-					<th>Complete</th>
-					<th>Last Updated</th>
-					<th>Missing Sections</th>
-					<th>File History</th>
+					<th>Study</th>
+					<th>Files</th>
+					<th>Status</th>
+					<th>Issues</th>
+					<th>Links</th>
+					<th>Privacy</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr ng-repeat='report in fund.reports'>
-					<td>{{report.filename}}</td>
-					<td>{{report.type}}</td>
-					<td>{{report.complete | yesNo}}<span class="badge pull-right help" title='{{getWhyIncomplete(report)}}'>i</span></td>
-					<td>{{report.updated | date : 'dd/MM/yyyy'}}</td>
-					<td>{{report.missing.length > 0 | yesNo}}<span class="badge pull-right help" title='{{getArrayAsList(report.missing)}}'>i</span></td>
+					<td>{{report.study}}</td>
 					<td class='btn-group'>
-						<a class='btn btn-default' href='{{report.link}}' target='_blank' title='View History'>
-							<i class="glyphicon glyphicon-th-list"></i>
+						<a href='{{report.link}}' class='btn btn-default' type='button' title='Latest Version' ng-disabled='!report.link'>
+								<i class='glyphicon glyphicon-fire'></i>
 						</a>
+					
+						<a href='{{report.detaillink}}' class='btn btn-default' type='button' title='Details' ng-disabled='!report.detaillink'>
+								<i class='glyphicon glyphicon-eye-open'></i>
+						</a>
+
+						<a href='{{report.dmplink}}' class='btn btn-default' type='button' title='Data Management Plan' ng-disabled='!report.dmplink'>
+								<i class='glyphicon glyphicon-road'></i>
+						</a>
+						
+						<a href='{{report.prereglink}}' class='btn btn-default' type='button' title='Pre-Registered Version' ng-disabled='!report.prereglink'>
+								<i class='glyphicon glyphicon-pushpin'></i>
+						</a>
+					</td>
+					<td>{{getStatus(report)}}</td>
+					<td ng-hide='getIssues(report).length > 0'>None</td>
+					<td ng-hide='getIssues(report).length < 1'>Issues Found<span class="badge pull-right help" title='{{getIssues(report).join()}}'>i</span></td>
+
+					<td class='btn-group'>
+						<a href='{{report.citations}}' class='btn btn-default' type='button' title='Citation to Final Publication' ng-disabled='!report.citations'>
+								<i class='glyphicon glyphicon-book'></i>
+						</a>
+					
+						<a href='{{report.subbmittedpublic}}' class='btn btn-default' type='button' title='Submitted to Public Archive' ng-disabled='!report.subbmittedpublic'>
+								<i class='glyphicon glyphicon-cloud'></i>
+						</a>
+					</td>
+					
+					<td>
+						<button class='btn btn-default' type='button' title='Publish'>
+								<i class='glyphicon glyphicon-lock'></i>
+						</button>
 					</td>
 				</tr>
 			</tbody>
