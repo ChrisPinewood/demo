@@ -28,38 +28,38 @@
 				<tr ng-repeat='report in fund.reports'>
 					<td>{{report.study}}</td>
 					<td class='btn-group'>
-						<a href='{{report.link}}' class='btn btn-default' type='button' title='Latest Version' ng-disabled='!report.link'>
-								<i class='glyphicon glyphicon-fire'></i>
+						<a href='{{report.link}}' class='btn btn-default' type='button' title='Latest Version' target='_blank' ng-disabled='!report.link'>
+								<i class='glyphicon glyphicon-file'></i>
 						</a>
 					
-						<a href='{{report.detaillink}}' class='btn btn-default' type='button' title='Details' ng-disabled='!report.detaillink'>
-								<i class='glyphicon glyphicon-eye-open'></i>
+						<a href='{{report.detaillink}}' class='btn btn-default' type='button' title='Details' target='_blank' ng-disabled='!report.detaillink'>
+								<i class='glyphicon glyphicon-list-alt'></i>
 						</a>
 
-						<a href='{{report.dmplink}}' class='btn btn-default' type='button' title='Data Management Plan' ng-disabled='!report.dmplink'>
+						<a href='{{report.dmplink}}' class='btn btn-default' type='button' title='Data Management Plan' target='_blank' ng-disabled='!report.dmplink'>
 								<i class='glyphicon glyphicon-road'></i>
 						</a>
 						
-						<a href='{{report.prereglink}}' class='btn btn-default' type='button' title='Pre-Registered Version' ng-disabled='!report.prereglink'>
-								<i class='glyphicon glyphicon-pushpin'></i>
+						<a href='{{report.prereglink}}' class='btn btn-default' type='button' title='Pre-Registered Version' target='_blank' ng-disabled='!report.prereglink'>
+								<i class='glyphicon glyphicon-registration-mark'></i>
 						</a>
 					</td>
 					<td>{{getStatus(report)}}</td>
 					<td ng-hide='getIssues(report).length > 0'>None</td>
-					<td ng-hide='getIssues(report).length < 1'>Issues Found<span class="badge pull-right help" title='{{getIssues(report).join()}}'>i</span></td>
+					<td ng-hide='getIssues(report).length < 1'>Issues Found<span class="badge pull-right help" target='_blank' title='{{getIssues(report).join("\n")}}'>i</span></td>
 
 					<td class='btn-group'>
-						<a href='{{report.citations}}' class='btn btn-default' type='button' title='Citation to Final Publication' ng-disabled='!report.citations'>
-								<i class='glyphicon glyphicon-book'></i>
+						<a href='{{report.dataLink}}' class='btn btn-default' type='button' title='Report Data' target='_blank' ng-disabled='!report.dataLink'>
+								<i class='glyphicon glyphicon-cloud'></i>
 						</a>
 					
-						<a href='{{report.subbmittedpublic}}' class='btn btn-default' type='button' title='Submitted to Public Archive' ng-disabled='!report.subbmittedpublic'>
-								<i class='glyphicon glyphicon-cloud'></i>
+						<a href='{{report.submittedpublic}}' class='btn btn-default' type='button' title='Submitted to Public Archive' target='_blank' ng-disabled='!report.submittedpublic'>
+								<i class='glyphicon glyphicon-book'></i>
 						</a>
 					</td>
 					
 					<td>
-						<button class='btn btn-default' type='button' title='Publish'>
+						<button class='btn btn-default' type='button' title='Publish' ng-disabled='report.submittedpublic'>
 								<i class='glyphicon glyphicon-lock'></i>
 						</button>
 					</td>

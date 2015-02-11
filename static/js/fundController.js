@@ -129,7 +129,9 @@ app.controller('DetailFundCtrl', function($scope, $modalInstance, fund){
 	$scope.getStatus = function(report) {
 		var status = 'New';
 		
-		if (report.updated){
+		if (report.submittedpublic){
+			status = 'Published';
+		} else if (report.updated){
 			var now = new Date();
 			var lastUpdate = new Date(report.updated)
 			var diff = now - lastUpdate;
@@ -137,8 +139,10 @@ app.controller('DetailFundCtrl', function($scope, $modalInstance, fund){
 			var SIX_MONTHS = 1000 * 60 * 60 * 24 * 182;
 			if (diff > SIX_MONTHS){
 				status = 'Dormant';
-			} else {
+			} else if ($scope.getIssues(report).length > 0) {
 				status = 'In Development';
+			} else {
+				status = 'Complete';
 			}
 		}
 		

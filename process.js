@@ -1,10 +1,13 @@
 var fs = require('fs');
 var path = require('path');
+var extend = require('util')._extend;
 var documents = require('./resources/documents').documents;
 var types = require('./resources/types');
 var config = require('./config');
+var git = require('./git');
+var moment = require('moment');
 
-var process = function(source, destination, status) {
+var processManuscript = function(source, destination, status) {
 	return new Promise(
 		function(resolve, reject){	
 			readFile(source)
@@ -18,8 +21,6 @@ var process = function(source, destination, status) {
 
 					// whack the title onto the front of the sections array
 					sections.unshift(title);
-					
-					console.log(sections);
 			
 					var desired = buildFile(info.document.sections, sections, data);
 			
@@ -33,12 +34,8 @@ var process = function(source, destination, status) {
 							filename: buildFilename(source), 
 							markdown: buildMarkdown(source), 
 							link: buildLink(source),
-							prereglink: buildLink(source),
 							dmplink: buildDMP(source),
-							detaillink: buildDetail(source),
-							citations: '',
-							submittedpublic: '',
-							privacy: ''
+							detaillink: buildDetail(source)
 						};
 						var statusObject = buildStatusObject(desired.details, info.document.name, reportDetails);
 						return updateFile(statusObject);
@@ -88,13 +85,17 @@ var buildLink = function(source){
 	return config.git.historyUrl + buildMarkdown(source);
 }
 
+var buildPreregLink = function(source, blob){
+	return config.git.blobUrl + blob + '/' + buildMarkdown(source);
+}
+
 var buildDMP = function(source){
-	var basename = path.basname(source, config.file.markdown);
+	var basename = path.basename(source, config.file.markdown);
 	return buildLink(basename + config.file.dmp + config.file.markdown);
 }
 
 var buildDetail = function(source){
-	var basename = path.basname(source, config.file.markdown);
+	var basename = path.basename(source, config.file.markdown);
 	return buildLink(basename + config.file.detail + config.file.markdown);
 }
 
@@ -116,16 +117,22 @@ var writeFile = function(destination, data, pass){
 var updateFile = function(statusObject){
 	return new Promise(
 		function(resolve, reject){
+			if (!statusObject){
+				reject();
+				return;
+			}
+		
 			fs.readFile(config.file.documentStatus, 'utf-8', function(err, data){
 				if (err){
 					reject(err);
 					return;
 				}
 				var allStatus = JSON.parse(data);
-				console.log(data, allStatus);
+	
 				var statusIdx = allStatus.findIndex(function(element, index, array){
 					return (element) && (element.researcher.toUpperCase() === statusObject.researcher.toUpperCase());
 				});
+				
 				if (statusIdx >= 0){
 					allStatus[statusIdx].researcher = statusObject.researcher;
 					allStatus[statusIdx].email = statusObject.email;
@@ -135,18 +142,23 @@ var updateFile = function(statusObject){
 						allStatus[statusIdx].reports = [];
 					}
 					
-					var reportIdx = allStatus[statusIdx].reports.findIndex(function(element, index, array){
-						return (element) && (element.filename.toUpperCase() === statusObject.report.filename.toUpperCase());
-					});
+					// If a report was given, add it to the reports array
+					if (statusObject.report) {
+						var reportIdx = allStatus[statusIdx].reports.findIndex(function(element, index, array){
+							return (element) && (element.filename.toUpperCase() === statusObject.report.filename.toUpperCase());
+						});
 					
-					if (reportIdx >= 0){
-						console.log('Adding to report idx', reportIdx);
-						allStatus[statusIdx].reports[reportIdx] = statusObject.report;
+						if (reportIdx >= 0){
+							console.log('Adding to report idx', reportIdx);
+							allStatus[statusIdx].reports[reportIdx] = extend(allStatus[statusIdx].reports[reportIdx], statusObject.report);
+						} else {
+							console.log('Adding first report');
+							allStatus[statusIdx].reports.push(statusObject.report);
+						}
 					} else {
-						console.log('Adding first report', statusObject.report);
-						allStatus[statusIdx].reports.push(statusObject.report);
+						// If no report was given, overwrite the reports array with given reports
+						allStatus[statusIdx].reports = statusObject.reports;
 					}
-					
 				} else {
 					var newStatus = statusObject;
 					delete newStatus.report;
@@ -154,11 +166,14 @@ var updateFile = function(statusObject){
 					allStatus.push(newStatus);
 				}
 				
-				var strObj = JSON.stringify(allStatus);
+				var strObj = JSON.stringify(allStatus, null, 2);
+				console.log('Writing', config.file.documentStatus, '...');
 				fs.writeFile(config.file.documentStatus, strObj, function(err){
 					if (err) {
+						console.log('FAILED to write', config.file.documentStatus);
 						reject(err);
 					} else {
+						console.log('... wrote', config.file.documentStatus);
 						resolve();
 					}
 				});
@@ -177,6 +192,22 @@ var readFile = function(source) {
 				resolve(data);
 			});
 		});
+}
+
+var extractStatusObject = function(data, researcher){
+	var allStatus = JSON.parse(data);
+	
+	var statusIdx = allStatus.findIndex(function(element, index, array){
+		return (element) && (element.researcher.toUpperCase() === researcher.toUpperCase());
+	});
+	
+	var extracted = {};
+	
+	if (statusIdx >= 0){
+		extracted = allStatus[statusIdx];
+	}
+	
+	return extracted;	
 }
 
 var guessReport = function(data) {
@@ -203,6 +234,7 @@ var extractSections = function(data) {
 			textEnd: match.index,
 			done: false
 		};
+		
 		result.heading = result.heading.replace(/[:\*]/g,'');
 		result.heading = result.heading.trim();
 		result.textStart = result.index + match[0].length + 1;
@@ -211,7 +243,6 @@ var extractSections = function(data) {
 	}
 	
 	for (var idx=1; idx < results.length; idx++){
-		console.log(results[idx - 1]);
 		results[idx - 1].textEnd = results[idx].index;
 	}
 	
@@ -260,7 +291,6 @@ var buildFile = function(desiredSections, actualSections, data) {
 	var desiredIdx = 1;
 	desiredSections.forEach(function(desired){	
 		// a heading with an abstract
-		console.log(desired.name);
 		if (desired.type === types.title1 || desired.type === types.title2){
 			var actual = {};
 			if (actualSections.length > 0) {
@@ -299,7 +329,6 @@ var buildFile = function(desiredSections, actualSections, data) {
 			});
 			
 			if (actualIdx !== desiredIdx) {
-				console.log('Order wanted', desiredIdx, 'got', actualIdx);
 				document.details.unordered = true;
 			}
 			desiredIdx++;
@@ -319,7 +348,7 @@ var buildFile = function(desiredSections, actualSections, data) {
 					document.contents += '\n';
 
 					if ('requires' in desired){
-						if (sectionText.indexOf(desired.requires) < 0) {
+						if (sectionText.toLowerCase().indexOf(desired.requires) < 0) {
 							document.details.requires.push({
 								heading: desired.name,
 								requires: desired.requires
@@ -420,6 +449,97 @@ var buildStatusObject = function(details, detected, reportDetails){
 }
 
 ///////////////////////////////////////////////////////////////
+//
+
+var extractDate = function(re, data){
+	var match = re.exec(data);
+	if (match) {
+		
+		var extracted = match[1].trim();
+		console.log('Attempting conversion', extracted);
+		moment.locale('en-GB');
+		return moment(extracted, ['L', 'l', 'LL', 'l', moment.ISO_8601]);
+	}
+	return null;
+}
+
+var getDataCollectionStart = function(detail) {
+	var re = /(?:\n\| Data Collection Start \|)(.*)(?:\|\n)/gim;
+	return extractDate(re, detail);
+}
+
+var processDetails = function(source, reportName, markdown){
+	return new Promise(
+		function(resolve, reject){	
+			var preregDate = null;
+			
+			readFile(source)
+			.then(function(detail){
+				preregDate = getDataCollectionStart(detail);
+				console.log('Extracted prereg date', preregDate.format());
+				if (preregDate){
+					resolve();
+				}
+				else {
+					reject();
+					throw "No preregistration yet found";
+				}
+			}).then(function(){
+				return git.lastCommitBefore(config.folder.repo, markdown, preregDate.toDate());
+			}).then(function(blob){
+				console.log('preregdate', preregDate.format(), 'blob', blob);
+				if (preregDate){
+					fs.readFile(config.file.documentStatus, 'utf-8', function(err, data){
+						if (err){
+							reject(err);
+							return;
+						}
+						var statusObject = extractStatusObject(data, config.user.name);
+						statusObject.report = {
+							filename : reportName,
+							preregdate : preregDate.format(),
+							prereglink : buildPreregLink(markdown, blob)
+						};
+						
+						updateFile(statusObject).then(resolve).catch(reject);
+					});
+				}
+			})
+		})
+}
+
+///////////////////////////////////////////////////////////////
+//
+var processPlan = function(source){
+}
+
+///////////////////////////////////////////////////////////////
+//
+var removeManuscript = function(source){
+	return new Promise(
+		function(resolve, reject){
+			fs.readFile(config.file.documentStatus, 'utf-8', function(err, data){
+				if (err){
+					reject(err);
+					return;
+				}
+				
+				var statusObject = extractStatusObject(data, config.user.name);
+				var reports = [];
+				statusObject.reports.forEach(function(report){
+					if (report.study !== source) {
+						console.log('Copying report', report);
+						reports.push(report);
+					}
+				});
+				statusObject.reports = reports;
+				
+				updateFile(statusObject).then(resolve).catch(reject);
+			});
+		});
+}
+
+///////////////////////////////////////////////////////////////
 // Polyfills for ES6
 require('es6-promise').polyfill();
 if (!Array.prototype.findIndex) {
@@ -446,5 +566,8 @@ if (!Array.prototype.findIndex) {
 }
 
 module.exports = {
-	process : process
+	manuscript : processManuscript,
+	details : processDetails,
+	plan : processPlan,
+	remove : removeManuscript
 }

@@ -14,8 +14,7 @@
   "dependencies": {
     "chokidar": "^0.12.5",
     "es6-promise": "^2.0.1",
-    "express": "^4.10.7",
-    "nodegit": "^0.2.4",
-    "passport": "^0.2.1"
+    "express": "^4.11.2",
+    "moment": "^2.9.0"
   }
 }

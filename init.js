@@ -8,7 +8,7 @@ module.exports = {
 }
 
 var config = require('./config');
-var git = require('./store');
+var git = require('./git');
 var fs = require('fs');
 
 var createFolder = function(source) {

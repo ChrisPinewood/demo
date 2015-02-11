@@ -1,7 +1,7 @@
 module.exports = {
 	toMarkdown : function(source, destination) {
 		return new Promise( function(resolve, reject) {
-			var command = config.folder.scripts + 'convert.sh \"' + source + '\" \"' + destination + '\" markdown_github';
+			var command = config.folder.scripts + 'convert.sh \"' + source + '\" \"' + destination + '\" markdown_github+yaml_metadata_block';
 			exec(command, function(error, stdout, stderr){
 				if(!error) {
 					console.log('Converted', source, 'to', destination);
